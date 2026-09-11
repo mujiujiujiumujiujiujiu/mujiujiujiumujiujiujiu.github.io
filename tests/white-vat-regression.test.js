@@ -14,6 +14,12 @@ function composite(channel, density, background255) {
 assert.match(source, /13\s*\/\s*255/);
 assert.match(source, /19\s*\/\s*255/);
 assert.match(source, /29\s*\/\s*255/);
+assert.match(source, /function\s+erase/);
+assert.match(source, /mode:\s*"clear"/);
+assert.match(source, /dyeA\[k\]\s*=\s*lerp\(dyeA\[k\],\s*0/);
+assert.match(source, /Math\.max\(0,\s*sample\(dyeA0/);
+assert.match(source, /deviceorientation/);
+assert.match(source, /devicemotion/);
 const pixel = [0.92, 0.42, 0.12].map((channel, index) => composite(channel, 0.86, [13, 19, 29][index]));
 assert.ok(pixel.some((channel) => channel < 0.98), `expected a colored pixel, got ${pixel.join(",")}`);
 console.log("white-vat regression: pass", pixel.map((channel) => channel.toFixed(3)).join(","));

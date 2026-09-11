@@ -32,22 +32,42 @@
   const VAT = { x: 30, y: 132, w: 844, h: 410, r: 34 };
   const LIQUID = { x: 51, y: 174, w: 802, h: 343, r: 24 };
   const SPECTRUM = { x: 180, y: 68, w: 604, h: 46 };
+  const CLEAR_START = 0.86;
+  const MOTION_BUTTON = { x: 586, y: 13, w: 128, h: 35 };
   const RESET_BUTTON = { x: 800, y: 67, w: 72, h: 48 };
 
   const state = {
     time: 0,
-    selected: { h: 28, rgb: null, source: "牛顿色环" },
+    selected: { mode: "dye", h: 28, rgb: null, source: "牛顿色环" },
     force: { x: 0, y: 0, energy: 0, angle: 0 },
     strokes: 0,
     drops: 0,
     samples: 0,
     hasInteracted: false,
-    toast: "点按取样 · 拖动搅拌 · 长按播撒",
+    toast: "点按取样 · 拖动/摇晃搅拌 · 长按播撒",
     toastUntil: 999,
     sampleFx: null,
     flash: 0,
   };
   state.selected.rgb = hsvToRgb(state.selected.h, 0.86, 0.98);
+
+  const motion = {
+    enabled: false,
+    permission: "idle",
+    tiltX: 0,
+    tiltY: 0,
+    shakeX: 0,
+    shakeY: 0,
+    shakeEnergy: 0,
+    lastAccelX: 0,
+    lastAccelY: 0,
+    lastAccelZ: 0,
+    hasSample: false,
+    referenceGamma: null,
+    referenceBeta: null,
+    calibrated: false,
+    lastStrokeAt: -Infinity,
+  };
 
   const pointer = {
     active: false,
@@ -341,6 +361,35 @@
       }
     }
 
+    function erase(screenX, screenY, amount = 0.064, radius = 30, dx = 0, dy = 0) {
+      const gx = (screenX - LIQUID.x) / LIQUID.w * (nx - 1);
+      const gy = (screenY - LIQUID.y) / LIQUID.h * (ny - 1);
+      const rx = Math.max(2, radius / LIQUID.w * nx);
+      const ry = Math.max(2, radius / LIQUID.h * ny);
+      const minX = Math.max(1, Math.floor(gx - rx * 2.2));
+      const maxX = Math.min(nx - 2, Math.ceil(gx + rx * 2.2));
+      const minY = Math.max(1, Math.floor(gy - ry * 2.2));
+      const maxY = Math.min(ny - 2, Math.ceil(gy + ry * 2.2));
+      const forceX = dx / (LIQUID.w / nx) * 2.2;
+      const forceY = dy / (LIQUID.h / ny) * 2.2;
+      for (let y = minY; y <= maxY; y += 1) {
+        for (let x = minX; x <= maxX; x += 1) {
+          const nxp = (x - gx) / rx;
+          const nyp = (y - gy) / ry;
+          const weight = Math.exp(-(nxp * nxp + nyp * nyp) * 0.72);
+          if (weight < 0.012) continue;
+          const k = index(x, y);
+          const mix = clamp(amount * weight * 2.8, 0, 0.42);
+          dyeR[k] = lerp(dyeR[k], 0, mix);
+          dyeG[k] = lerp(dyeG[k], 0, mix);
+          dyeB[k] = lerp(dyeB[k], 0, mix);
+          dyeA[k] = lerp(dyeA[k], 0, mix);
+          vx[k] += forceX * weight;
+          vy[k] += forceY * weight;
+        }
+      }
+    }
+
     function sampleColor(screenX, screenY) {
       const gx = (screenX - LIQUID.x) / LIQUID.w * (nx - 1);
       const gy = (screenY - LIQUID.y) / LIQUID.h * (ny - 1);
@@ -422,7 +471,7 @@
           dyeR[k] = sample(dyeR0, backX, backY);
           dyeG[k] = sample(dyeG0, backX, backY);
           dyeB[k] = sample(dyeB0, backX, backY);
-          dyeA[k] = Math.max(0.72, sample(dyeA0, backX, backY) * 0.9997);
+          dyeA[k] = Math.max(0, sample(dyeA0, backX, backY) * 0.9997);
           vx[k] *= Math.pow(0.993, safeDt * 60);
           vy[k] *= Math.pow(0.993, safeDt * 60);
         }
@@ -450,20 +499,157 @@
     }
 
     reset();
-    return { nx, ny, reset, step, render, paint, applyImpulse, sampleColor };
+    return { nx, ny, reset, step, render, paint, erase, applyImpulse, sampleColor };
   })();
 
   function selectHue(hue, source = "牛顿色环") {
     const normalized = ((hue % 360) + 360) % 360;
-    state.selected = { h: normalized, rgb: hsvToRgb(normalized, 0.86, 0.98), source };
+    state.selected = { mode: "dye", h: normalized, rgb: hsvToRgb(normalized, 0.86, 0.98), source };
     state.hasInteracted = true;
     state.flash = 0.28;
     setToast(`已选择 ${colorName(normalized)}色 · 长按染缸播撒`, 1.7);
   }
 
+  function selectClear(source = "色环清除端") {
+    state.selected = { mode: "clear", h: 0, rgb: { r: 0.88, g: 0.94, b: 1 }, source };
+    state.hasInteracted = true;
+    state.flash = 0.28;
+    setToast("已选择清除色 · 长按让该处变成无色", 2.0);
+  }
+
   function selectFromSpectrum(x) {
     const ratio = clamp((x - SPECTRUM.x) / SPECTRUM.w, 0, 1);
-    selectHue(ratio * 360);
+    if (ratio >= CLEAR_START) {
+      selectClear();
+      return;
+    }
+    selectHue(ratio / CLEAR_START * 360);
+  }
+
+  function selectedSpectrumX() {
+    if (state.selected.mode === "clear") return SPECTRUM.x + SPECTRUM.w * (CLEAR_START + (1 - CLEAR_START) * 0.5);
+    return SPECTRUM.x + state.selected.h / 360 * SPECTRUM.w * CLEAR_START;
+  }
+
+  function onOrientation(event) {
+    if (typeof event.gamma !== "number" || typeof event.beta !== "number") return;
+    if (!motion.calibrated) {
+      motion.referenceGamma = event.gamma;
+      motion.referenceBeta = event.beta;
+      motion.calibrated = true;
+      return;
+    }
+    motion.tiltX = clamp((event.gamma - motion.referenceGamma) / 28, -1, 1);
+    motion.tiltY = clamp((event.beta - motion.referenceBeta) / 32, -1, 1);
+  }
+
+  function onDeviceMotion(event) {
+    const acceleration = event.acceleration || event.accelerationIncludingGravity;
+    if (!acceleration) return;
+    const ax = Number(acceleration.x) || 0;
+    const ay = Number(acceleration.y) || 0;
+    const az = Number(acceleration.z) || 0;
+    if (!motion.hasSample) {
+      motion.lastAccelX = ax;
+      motion.lastAccelY = ay;
+      motion.lastAccelZ = az;
+      motion.hasSample = true;
+      return;
+    }
+    const deltaX = ax - motion.lastAccelX;
+    const deltaY = ay - motion.lastAccelY;
+    const deltaZ = az - motion.lastAccelZ;
+    const magnitude = Math.hypot(deltaX, deltaY, deltaZ);
+    if (magnitude > 0.75) {
+      motion.shakeX = clamp(motion.shakeX + deltaX * 0.22, -2.2, 2.2);
+      motion.shakeY = clamp(motion.shakeY + deltaY * 0.22, -2.2, 2.2);
+      motion.shakeEnergy = clamp(motion.shakeEnergy + magnitude * 0.08, 0, 1);
+    }
+    motion.lastAccelX = ax;
+    motion.lastAccelY = ay;
+    motion.lastAccelZ = az;
+  }
+
+  function clearMotionInput() {
+    motion.tiltX = 0;
+    motion.tiltY = 0;
+    motion.shakeX = 0;
+    motion.shakeY = 0;
+    motion.shakeEnergy = 0;
+    motion.lastAccelX = 0;
+    motion.lastAccelY = 0;
+    motion.lastAccelZ = 0;
+    motion.hasSample = false;
+    motion.referenceGamma = null;
+    motion.referenceBeta = null;
+    motion.calibrated = false;
+    motion.lastStrokeAt = -Infinity;
+  }
+
+  async function toggleMotion() {
+    if (motion.enabled) {
+      window.removeEventListener("deviceorientation", onOrientation, true);
+      window.removeEventListener("devicemotion", onDeviceMotion, true);
+      motion.enabled = false;
+      motion.permission = "off";
+      clearMotionInput();
+      setToast("陀螺仪已暂停 · 可用拖动摇晃染缸", 2.0);
+      return;
+    }
+
+    const OrientationSensor = window.DeviceOrientationEvent;
+    const MotionSensor = window.DeviceMotionEvent;
+    if (!OrientationSensor && !MotionSensor) {
+      motion.permission = "unsupported";
+      setToast("当前设备不支持陀螺仪 · 拖动即可摇晃染缸", 2.4);
+      return;
+    }
+
+    try {
+      const orientationRequest = typeof OrientationSensor?.requestPermission === "function"
+        ? OrientationSensor.requestPermission()
+        : Promise.resolve("granted");
+      const motionRequest = typeof MotionSensor?.requestPermission === "function"
+        ? MotionSensor.requestPermission()
+        : Promise.resolve("granted");
+      const [orientationPermission, motionPermission] = await Promise.all([orientationRequest, motionRequest]);
+      if (orientationPermission !== "granted" || motionPermission !== "granted") throw new Error("sensor permission denied");
+      clearMotionInput();
+      if (OrientationSensor) window.addEventListener("deviceorientation", onOrientation, { capture: true, passive: true });
+      if (MotionSensor) window.addEventListener("devicemotion", onDeviceMotion, { capture: true, passive: true });
+      motion.enabled = true;
+      motion.permission = "on";
+      setToast("陀螺仪已连接 · 保持设备姿态后倾斜或摇晃", 2.2);
+    } catch (error) {
+      motion.enabled = false;
+      motion.permission = "denied";
+      setToast("未开启传感器 · 拖动即可摇晃染缸", 2.4);
+    }
+  }
+
+  function updateMotion(dt) {
+    if (!motion.enabled) return;
+    const centerX = LIQUID.x + LIQUID.w * 0.5;
+    const centerY = LIQUID.y + LIQUID.h * 0.5;
+    const inputX = clamp(motion.tiltX * 0.86 + motion.shakeX * 0.68, -2, 2);
+    const inputY = clamp(motion.tiltY * 0.86 + motion.shakeY * 0.68, -2, 2);
+    const inputMagnitude = Math.hypot(inputX, inputY);
+    if (inputMagnitude > 0.025) {
+      const impulseScale = (REDUCE_MOTION ? 11 : 18) * dt * (1 + motion.shakeEnergy * 0.8);
+      fluid.applyImpulse(centerX, centerY, inputX * impulseScale, inputY * impulseScale, 150);
+      state.hasInteracted = true;
+      state.force.x = lerp(state.force.x, inputX * 25, 0.2);
+      state.force.y = lerp(state.force.y, inputY * 25, 0.2);
+      state.force.energy = lerp(state.force.energy, clamp(inputMagnitude / 1.45, 0, 1), 0.24);
+      state.force.angle = Math.atan2(inputY, inputX);
+      if (inputMagnitude > 0.12 && state.time - motion.lastStrokeAt > 0.16) {
+        state.strokes += 1;
+        motion.lastStrokeAt = state.time;
+      }
+    }
+    motion.shakeX = lerp(motion.shakeX, 0, 0.12);
+    motion.shakeY = lerp(motion.shakeY, 0, 0.12);
+    motion.shakeEnergy = lerp(motion.shakeEnergy, 0, 0.1);
   }
 
   function resetScene() {
@@ -478,9 +664,12 @@
     state.force.angle = 0;
     state.sampleFx = null;
     state.flash = 0.5;
+    motion.shakeX = 0;
+    motion.shakeY = 0;
+    motion.shakeEnergy = 0;
     ripples.length = 0;
     particles.length = 0;
-    setToast("染缸已复位 · 点按取样，拖动搅拌，长按播撒", 2.6);
+    setToast("染缸已复位 · 点按取样，拖动/摇晃搅拌，长按播撒", 2.6);
   }
 
   function beginSpray() {
@@ -488,13 +677,19 @@
     pointer.longPress = true;
     pointer.lastSpray = state.time - 0.1;
     state.hasInteracted = true;
-    setToast(`播撒 ${colorName(state.selected.h)}色 · 拖动改变流向`, 2.2);
+    const label = state.selected.mode === "clear" ? "清除色" : `${colorName(state.selected.h)}色`;
+    const action = state.selected.mode === "clear" ? "清除为无色" : `播撒 ${label}`;
+    setToast(`${action} · 拖动改变流向`, 2.2);
     addRipple(pointer.x, pointer.y, rgbToHex(state.selected.rgb), 30, 0.7, 1.2);
     addParticles(pointer.x, pointer.y, state.selected.rgb, 10, 34);
   }
 
   function sprayAt(x, y, dx = 0, dy = 0) {
-    fluid.paint(x, y, state.selected.rgb, REDUCE_MOTION ? 0.026 : 0.04, 25, dx, dy);
+    if (state.selected.mode === "clear") {
+      fluid.erase(x, y, REDUCE_MOTION ? 0.044 : 0.064, 30, dx, dy);
+    } else {
+      fluid.paint(x, y, state.selected.rgb, REDUCE_MOTION ? 0.026 : 0.04, 25, dx, dy);
+    }
     state.drops += 1;
     state.force.x = lerp(state.force.x, dx * 9, 0.12);
     state.force.y = lerp(state.force.y, dy * 9, 0.12);
@@ -520,6 +715,7 @@
   function update(dt) {
     state.time += dt;
     updatePointerAction();
+    updateMotion(dt);
     fluid.step(dt);
     for (const ripple of ripples) ripple.age += dt;
     for (const particle of particles) {
@@ -580,10 +776,16 @@
 
   function drawSpectrum() {
     roundedRect(SPECTRUM.x, SPECTRUM.y, SPECTRUM.w, SPECTRUM.h, 14, "rgba(8, 12, 20, 0.88)", "rgba(236, 241, 255, 0.18)");
+    const innerX = SPECTRUM.x + 4;
+    const innerY = SPECTRUM.y + 4;
+    const innerW = SPECTRUM.w - 8;
+    const innerH = SPECTRUM.h - 8;
+    const rainbowW = innerW * CLEAR_START;
+    const clearX = innerX + rainbowW;
     ctx.save();
-    roundedRectPath(ctx, SPECTRUM.x + 4, SPECTRUM.y + 4, SPECTRUM.w - 8, SPECTRUM.h - 8, 10);
+    roundedRectPath(ctx, innerX, innerY, innerW, innerH, 10);
     ctx.clip();
-    const gradient = ctx.createLinearGradient(SPECTRUM.x, 0, SPECTRUM.x + SPECTRUM.w, 0);
+    const gradient = ctx.createLinearGradient(innerX, 0, clearX, 0);
     const stops = [
       [0, "#ff2e3d"],
       [0.14, "#ff8a25"],
@@ -593,17 +795,40 @@
       [0.64, "#39b7ff"],
       [0.76, "#496cff"],
       [0.88, "#b04bff"],
-      [1, "#ff2e3d"],
+      [1, "#f14bba"],
     ];
     for (const [stop, color] of stops) gradient.addColorStop(stop, color);
     ctx.fillStyle = gradient;
-    ctx.fillRect(SPECTRUM.x, SPECTRUM.y, SPECTRUM.w, SPECTRUM.h);
+    ctx.fillRect(innerX, innerY, rainbowW, innerH);
+    const clearGradient = ctx.createLinearGradient(clearX, 0, innerX + innerW, 0);
+    clearGradient.addColorStop(0, "#f5f9ff");
+    clearGradient.addColorStop(0.5, "#dbe7f5");
+    clearGradient.addColorStop(1, "#aebfd4");
+    ctx.fillStyle = clearGradient;
+    ctx.fillRect(clearX, innerY, innerW - rainbowW, innerH);
     ctx.globalAlpha = 0.22;
     ctx.fillStyle = "#ffffff";
-    for (let i = 1; i < 12; i += 1) ctx.fillRect(SPECTRUM.x + i * SPECTRUM.w / 12, SPECTRUM.y, 1, SPECTRUM.h);
+    for (let i = 1; i < 12; i += 1) ctx.fillRect(innerX + i * rainbowW / 12, innerY, 1, innerH);
+    ctx.globalAlpha = 0.28;
+    ctx.strokeStyle = "rgba(24, 42, 66, 0.44)";
+    ctx.lineWidth = 1;
+    for (let x = clearX - innerH; x < innerX + innerW + innerH; x += 12) {
+      ctx.beginPath();
+      ctx.moveTo(x, innerY + innerH);
+      ctx.lineTo(x + innerH, innerY);
+      ctx.stroke();
+    }
     ctx.restore();
 
-    const selectedX = SPECTRUM.x + state.selected.h / 360 * SPECTRUM.w;
+    ctx.strokeStyle = "rgba(19, 32, 50, 0.54)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(clearX, innerY + 1);
+    ctx.lineTo(clearX, innerY + innerH - 1);
+    ctx.stroke();
+    text("清除", clearX + (innerW - rainbowW) * 0.5, SPECTRUM.y + SPECTRUM.h * 0.5 + 4, 11, "#26384f", 700, "center");
+
+    const selectedX = selectedSpectrumX();
     ctx.save();
     ctx.strokeStyle = "rgba(255, 255, 255, 0.92)";
     ctx.lineWidth = 2;
@@ -638,6 +863,19 @@
     text("DYE LAB  /  NEWTON RING", 38, 25, 11, COLORS.dim, 700);
     text("色彩染缸", 38, 55, 25, COLORS.ink, 700);
 
+    const motionHover = pointer.hover && inRect(pointer, MOTION_BUTTON);
+    const motionFill = motion.enabled
+      ? "rgba(31, 57, 88, 0.96)"
+      : motionHover
+        ? "rgba(29, 37, 53, 0.95)"
+        : COLORS.panel;
+    roundedRect(MOTION_BUTTON.x, MOTION_BUTTON.y, MOTION_BUTTON.w, MOTION_BUTTON.h, 17, motionFill, motion.enabled ? "rgba(132, 182, 255, 0.64)" : motionHover ? "rgba(236, 241, 255, 0.32)" : COLORS.line);
+    ctx.fillStyle = motion.enabled ? COLORS.blue : COLORS.soft;
+    ctx.beginPath();
+    ctx.arc(MOTION_BUTTON.x + 17, MOTION_BUTTON.y + MOTION_BUTTON.h * 0.5, 5, 0, TAU);
+    ctx.fill();
+    text(motion.enabled ? "陀螺仪 · 开" : "陀螺仪", MOTION_BUTTON.x + 30, MOTION_BUTTON.y + 22, 12, motion.enabled ? COLORS.ink : COLORS.soft, 600);
+
     roundedRect(727, 13, 145, 35, 17, COLORS.panel, COLORS.line);
     ctx.fillStyle = rgbToHex(state.selected.rgb);
     ctx.beginPath();
@@ -646,7 +884,8 @@
     ctx.strokeStyle = "rgba(255, 255, 255, 0.42)";
     ctx.lineWidth = 1;
     ctx.stroke();
-    text(`当前 ${rgbToHex(state.selected.rgb)}`, 764, 35, 12, COLORS.ink, 600);
+    const selectedLabel = state.selected.mode === "clear" ? "清除色" : rgbToHex(state.selected.rgb);
+    text(`当前 ${selectedLabel}`, 764, 35, 12, COLORS.ink, 600);
 
     text("牛顿色环", 38, 95, 13, COLORS.soft, 600);
     text("点击色带切换投染色", 38, 108, 11, COLORS.dim, 400);
@@ -660,7 +899,7 @@
   function drawForceMeter() {
     const x = 681;
     const y = 160;
-    text("受力方向", x, y, 11, COLORS.dim, 600);
+    text(motion.enabled ? "受力方向 · 陀螺仪" : "受力方向 · 手动", x, y, 11, COLORS.dim, 600);
     const cx = x + 66;
     const cy = y - 4;
     const length = 24;
@@ -787,7 +1026,7 @@
     ctx.lineWidth = 1;
     ctx.stroke();
     const toastActive = state.time < state.toastUntil;
-    text(toastActive ? state.toast : "点按取样 · 拖动把流体推向你想要的方向 · 长按播撒", x + 43, y + 26, 13, toastActive ? COLORS.ink : COLORS.soft, 500);
+    text(toastActive ? state.toast : "点按取样 · 拖动/摇晃推动流体 · 长按播撒", x + 43, y + 26, 13, toastActive ? COLORS.ink : COLORS.soft, 500);
     text(`${state.strokes} 次搅拌`, x + width - 179, y + 26, 12, COLORS.dim, 500);
     text(`${state.drops} 滴`, x + width - 82, y + 26, 12, COLORS.warm, 600, "right");
   }
@@ -833,7 +1072,10 @@
     ctx.beginPath();
     ctx.arc(point.x, point.y, active ? 4 : 2.5, 0, TAU);
     ctx.fill();
-    if (active) text(`播撒 · ${colorName(state.selected.h)}色`, point.x + 25, point.y - 18, 12, COLORS.ink, 600);
+    if (active) {
+      const label = state.selected.mode === "clear" ? "清除 · 变成无色" : `播撒 · ${colorName(state.selected.h)}色`;
+      text(label, point.x + 25, point.y - 18, 12, COLORS.ink, 600);
+    }
     ctx.restore();
   }
 
@@ -872,6 +1114,18 @@
     };
 
     register({
+      name: "select_clear_color",
+      title: "选择清除色",
+      description: "选择牛顿色环末端的清除色；长按染缸会把经过的区域擦成无色。",
+      inputSchema: { type: "object", properties: {}, additionalProperties: false },
+      annotations: { readOnlyHint: false, untrustedContentHint: false },
+      execute() {
+        selectClear("WebMCP 清除色");
+        return { mode: "clear", color: "clear" };
+      },
+    });
+
+    register({
       name: "select_newton_color",
       title: "选择牛顿色环颜色",
       description: "从 0 到 360 度的牛顿色环中选择投染颜色，并更新页面当前色彩。",
@@ -886,14 +1140,14 @@
         if (!input || typeof input.hue !== "number" || !Number.isFinite(input.hue)) throw new Error("hue 必须是 0 到 360 的数字");
         const hue = clamp(input.hue, 0, 360);
         selectHue(hue, "WebMCP 选色");
-        return { hue: Number(hue.toFixed(1)), color: rgbToHex(state.selected.rgb) };
+        return { mode: "dye", hue: Number(hue.toFixed(1)), color: rgbToHex(state.selected.rgb) };
       },
     });
 
     register({
       name: "pour_newton_dye",
       title: "向染缸播撒颜色",
-      description: "在染缸内以归一化坐标播撒当前颜色；x 和 y 的范围都是 0 到 1。",
+      description: "在染缸内以归一化坐标播撒当前染色或清除模式；x 和 y 的范围都是 0 到 1。",
       inputSchema: {
         type: "object",
         properties: {
@@ -921,8 +1175,9 @@
         }
         state.hasInteracted = true;
         addRipple(screenX, screenY, rgbToHex(state.selected.rgb), 48, 0.9, 1.4);
-        setToast(`已播撒 ${drops} 滴 ${colorName(state.selected.h)}色`, 1.8);
-        return { x: Number(x.toFixed(3)), y: Number(y.toFixed(3)), drops, color: rgbToHex(state.selected.rgb) };
+        const label = state.selected.mode === "clear" ? "无色区域" : `${colorName(state.selected.h)}色`;
+        setToast(state.selected.mode === "clear" ? `已清除 ${drops} 个位置` : `已播撒 ${drops} 滴 ${label}`, 1.8);
+        return { x: Number(x.toFixed(3)), y: Number(y.toFixed(3)), drops, mode: state.selected.mode, color: state.selected.mode === "clear" ? "clear" : rgbToHex(state.selected.rgb) };
       },
     });
 
@@ -944,7 +1199,7 @@
     const point = screenPoint(event);
     pointer.active = true;
     pointer.id = event.pointerId;
-    pointer.region = inRect(point, SPECTRUM) ? "spectrum" : inRect(point, RESET_BUTTON) ? "reset" : inVat(point) ? "vat" : "none";
+    pointer.region = inRect(point, MOTION_BUTTON) ? "motion" : inRect(point, SPECTRUM) ? "spectrum" : inRect(point, RESET_BUTTON) ? "reset" : inVat(point) ? "vat" : "none";
     pointer.x = point.x;
     pointer.y = point.y;
     pointer.lastX = point.x;
@@ -959,6 +1214,10 @@
 
     if (pointer.region === "spectrum") {
       selectFromSpectrum(point.x);
+      return;
+    }
+    if (pointer.region === "motion") {
+      void toggleMotion();
       return;
     }
     if (pointer.region === "reset") {
@@ -1020,7 +1279,7 @@
       } else if (!wasMoved && state.time - pointer.downAt < 0.36) {
         const sampled = fluid.sampleColor(x, y);
         const hsv = rgbToHsv(sampled);
-        state.selected = { h: hsv.h, rgb: sampled, source: "染缸取样" };
+        state.selected = { mode: "dye", h: hsv.h, rgb: sampled, source: "染缸取样" };
         state.samples += 1;
         state.hasInteracted = true;
         state.sampleFx = { x, y, rgb: sampled, age: 0 };
@@ -1054,12 +1313,11 @@
     if (event.key === " ") {
       const x = W / 2;
       const y = LIQUID.y + LIQUID.h * 0.55;
-      fluid.paint(x, y, state.selected.rgb, 0.2, 42);
+      sprayAt(x, y, 0, 0);
       addRipple(x, y, rgbToHex(state.selected.rgb), 62, 0.95, 1.5);
       addParticles(x, y, state.selected.rgb, 12, 42);
-      state.drops += 1;
       state.hasInteracted = true;
-      setToast("键盘投染 · 方向键切换颜色 · R 复位", 1.8);
+      setToast(state.selected.mode === "clear" ? "键盘清除 · 方向键切换颜色 · R 复位" : "键盘投染 · 方向键切换颜色 · R 复位", 1.8);
       event.preventDefault();
     }
   }
