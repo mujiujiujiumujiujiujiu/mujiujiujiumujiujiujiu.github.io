@@ -1,0 +1,198 @@
+{
+  "provider": "Mojang/bedrock-samples",
+  "retrieved": "2026-10-28",
+  "records": [
+    {
+      "name": "bedrock.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/bedrock.png",
+      "bytes": 278,
+      "sha256": "20ced86ba8cb89e29e2115f76c758278893e145575a73ca311bcc4305c140d04"
+    },
+    {
+      "name": "bucket_lava.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/items/bucket_lava.png",
+      "bytes": 259,
+      "sha256": "e693920da53440c3cf37464eccd0c9a5622840f7c39f22e3972153b2daf02e55"
+    },
+    {
+      "name": "bucket_water.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/items/bucket_water.png",
+      "bytes": 262,
+      "sha256": "53db72273ed5a8bba5bec6647b5d890754e27a9e7e4c5235e14e0a0b98411437"
+    },
+    {
+      "name": "cobblestone.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/cobblestone.png",
+      "bytes": 294,
+      "sha256": "6991153e654ef13e82b4aa02473db7062e7da86c7c4887b97aadd182715c92fe"
+    },
+    {
+      "name": "diamond_block.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/diamond_block.png",
+      "bytes": 293,
+      "sha256": "d0fe64ca6fa0dd6d68a3693cd942454725082b928ca27fed9551dd658fa23eeb"
+    },
+    {
+      "name": "diamond_pickaxe.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/items/diamond_pickaxe.png",
+      "bytes": 180,
+      "sha256": "33937596b8e6c77af014757802ff58583c46b5975757fb48a6bac3b013f604e6"
+    },
+    {
+      "name": "dirt.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/dirt.png",
+      "bytes": 295,
+      "sha256": "34bf03b346c0e86214a32117e3f892529da6b76ca8096347cbb6be3da313deab"
+    },
+    {
+      "name": "fire_0.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/fire_0.png",
+      "bytes": 12506,
+      "sha256": "37fc7a45b98d7cf2a48d488a1cc318deee66a8d59c62ea3700d7e278f7a8cdf3"
+    },
+    {
+      "name": "glass.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/glass.png",
+      "bytes": 176,
+      "sha256": "d05046fbbde177285eda910568cf2522001addd956d8eded476df6b4c2f09e2a"
+    },
+    {
+      "name": "gold_block.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/gold_block.png",
+      "bytes": 296,
+      "sha256": "d0ab8fa32d1dc295d5cf2ad3e4768e2c44971d605d4cbc18189bb652236175ec"
+    },
+    {
+      "name": "grass_side_carried.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/grass_side_carried.png",
+      "bytes": 408,
+      "sha256": "dedaa0171af63df63a6cf7e3e6c7078d4d5830fd93923f3005302ed0f02104c5"
+    },
+    {
+      "name": "grass_top.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/grass_top.png",
+      "bytes": 560,
+      "sha256": "0ba5276495195c594cee27ac56d477739e53aa2ee3ecb73dd7844a2d8a630255"
+    },
+    {
+      "name": "iron_block.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/iron_block.png",
+      "bytes": 223,
+      "sha256": "666e570940a1967728bd02cf1b62d2f122f5d12e9e9e97d12e5007bc58542512"
+    },
+    {
+      "name": "iron_pickaxe.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/items/iron_pickaxe.png",
+      "bytes": 216,
+      "sha256": "16e18511e790105f7b4838b383a341084a06be0e99b70e1e4511775a33bb3f44"
+    },
+    {
+      "name": "iron_shovel.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/items/iron_shovel.png",
+      "bytes": 184,
+      "sha256": "21ba6d8c5cc3f255e5c85cacc5e9fb61f5f9bfd7e006f00171eb967a417f11ec"
+    },
+    {
+      "name": "lava_still.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/lava_still.png",
+      "bytes": 10923,
+      "sha256": "09cbeb2e4a220cd4f1ba65516792cc5285ce4c968f8f39ca7d1e07670b199f29"
+    },
+    {
+      "name": "log_oak.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/log_oak.png",
+      "bytes": 292,
+      "sha256": "7abc3068a65c71784b14562ba254e3420c6d6301c8eb33d29fd25084f7e95c86"
+    },
+    {
+      "name": "log_oak_top.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/log_oak_top.png",
+      "bytes": 302,
+      "sha256": "b955d6f267fc9a5b34aaa6ebae0db54b0bad45b4d46c2dbc80b904e79e3347d4"
+    },
+    {
+      "name": "obsidian.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/obsidian.png",
+      "bytes": 294,
+      "sha256": "c614ae20e28ba3f1c61da175543ba50402b9663fca9dcc604ed3e6a0a527f642"
+    },
+    {
+      "name": "planks_oak.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/planks_oak.png",
+      "bytes": 297,
+      "sha256": "6a3494fc450899887a54a558f23868b9136a8da92c4b818756a3add5fb6fc9f3"
+    },
+    {
+      "name": "sponge.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/sponge.png",
+      "bytes": 299,
+      "sha256": "04d4fec04da2ee0019a96e5f7a4d914abc55d0404889cc8893c8e617ff6daa20"
+    },
+    {
+      "name": "sponge_wet.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/sponge_wet.png",
+      "bytes": 281,
+      "sha256": "49b8640fae76cb0d627914ba0fb6bb4cf75454a111463d68e86ba712cf27d994"
+    },
+    {
+      "name": "stone.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/stone.png",
+      "bytes": 244,
+      "sha256": "12f1c99206df13e951a68b9e5e294c5e0e15c252c3bb141632c8c969a909d1a8"
+    },
+    {
+      "name": "tnt_bottom.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/tnt_bottom.png",
+      "bytes": 137,
+      "sha256": "bc6e6f1add4b7916d24c0fff4453fb179a3bf09e1d05a031d63b7acc0dc9a07b"
+    },
+    {
+      "name": "tnt_side.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/tnt_side.png",
+      "bytes": 237,
+      "sha256": "4af68f72b5e9ea6cea5fd2c6dd2dff2965eba3f25628103b60369e4abd6b0725"
+    },
+    {
+      "name": "tnt_top.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/tnt_top.png",
+      "bytes": 277,
+      "sha256": "00fa686e96401a17cb7152c4a62eea16fa03651b4cc05dc7a437eca77283b266"
+    },
+    {
+      "name": "water_still.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/water_still.png",
+      "bytes": 5451,
+      "sha256": "74716976a928fc36422d8d8775be06bbfb9fb5f46027f84f30e15a6c249f0e26"
+    },
+    {
+      "name": "wool_colored_black.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/wool_colored_black.png",
+      "bytes": 559,
+      "sha256": "f6647d98a9df07e496535f1d69145908b40227345e7453437a64c7118bef385c"
+    },
+    {
+      "name": "wool_colored_green.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/wool_colored_green.png",
+      "bytes": 599,
+      "sha256": "f44a0971f54b46e43c30aab572b1089af0c4d31ff59439d0dcc609c8f1150c49"
+    },
+    {
+      "name": "wool_colored_lime.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/wool_colored_lime.png",
+      "bytes": 597,
+      "sha256": "75a690fded8fc910580f0417c02499e4276ca35e964207f2944c48d82e2d62f5"
+    },
+    {
+      "name": "wool_colored_white.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/wool_colored_white.png",
+      "bytes": 617,
+      "sha256": "c240f74136d8859fb3a2d37bd2786b33c8fcedc27f57db1d2cf228da0e921ea1"
+    },
+    {
+      "name": "wool_colored_yellow.png",
+      "url": "https://raw.githubusercontent.com/Mojang/bedrock-samples/main/resource_pack/textures/blocks/wool_colored_yellow.png",
+      "bytes": 639,
+      "sha256": "42f1bbb50b0ae718c39c807e7f36980cae2b6c891b018acf31cf322882586c2e"
+    }
+  ]
+}

@@ -1,61 +1,24 @@
-<!doctype html>
-<html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-    <meta name="theme-color" content="#070b12" />
-    <meta name="description" content="904×572 纯 Canvas 牛顿色环色彩染缸互动原型。" />
-    <title>牛顿色环 · 色彩染缸</title>
-    <style>
-      :root { color-scheme: dark; background: #070b12; }
-      * { box-sizing: border-box; }
-      html, body {
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        overflow: hidden;
-        background: #070b12;
-      }
-      body {
-        display: grid;
-        place-items: center;
-        padding: 0;
-        font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", system-ui, sans-serif;
-      }
-      main {
-        width: min(100vw, calc(100vh * 1.58042));
-        height: min(100vh, calc(100vw / 1.58042));
-        max-width: 904px;
-        max-height: 572px;
-        overflow: hidden;
-        border: 1px solid rgba(228, 238, 255, 0.12);
-        border-radius: 18px;
-        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.46), 0 0 0 1px rgba(255, 255, 255, 0.025);
-      }
-      canvas {
-        display: block;
-        width: 100%;
-        height: 100%;
-        touch-action: none;
-        user-select: none;
-        -webkit-user-select: none;
-        -webkit-touch-callout: none;
-        -webkit-tap-highlight-color: transparent;
-        cursor: crosshair;
-        outline: none;
-      }
-      @media (max-width: 620px) {
-        main { width: 100vw; height: auto; aspect-ratio: 904 / 572; border: 0; border-radius: 0; }
-      }
-      @media (prefers-reduced-motion: reduce) {
-        canvas { cursor: default; }
-      }
-    </style>
-  </head>
-  <body>
-    <main>
-      <canvas id="scene" width="904" height="572" tabindex="0" role="img" aria-label="牛顿色环色彩染缸：点按取样、拖动搅拌、长按播撒选中的颜色"></canvas>
-    </main>
-    <script src="./app.js" defer></script>
-  </body>
-</html>
+<!doctype html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#22251d"><title>小鳄鱼爱洗澡 · 我的世界方块篇</title><link rel="icon" href="assets/minecraft/grass_side_carried.png"><script src="data/levels.js"></script><link rel="stylesheet" href="style.css"></head><body>
+<canvas id="world" aria-label="侧面剖视的三维方块场景，点击方块可以挖掘"></canvas>
+<header><div class="brand"><img id="brand-icon" alt=""><div>小鳄鱼爱洗澡<small>我的世界 · 方块引水篇</small></div></div><div class="level-picker"><span>关卡</span><select id="level" aria-label="选择关卡"><option value="0">01 林间清泉</option><option value="1">02 矿洞爆破</option><option value="2">03 岩浆支流</option><option value="-1" hidden>自定义地图</option></select><span id="duck-stars" aria-label="小鸭子收集 0 / 3">☆☆☆</span></div><nav><button id="help" class="mc-button">玩法</button><button id="reset" class="mc-button reset"><span>↻</span> 重来</button></nav></header>
+<div class="legend"><span><i class="dirt-icon"></i> 工具决定挖掘能力</span><span><i class="obsidian-icon"></i> 黑曜石耐爆</span></div>
+<div class="zoom-panel"><button id="zoom-in" class="mc-button" aria-label="放大镜头">＋</button><button id="zoom-out" class="mc-button" aria-label="缩小镜头">−</button><button id="overview" class="mc-button" aria-label="恢复全景镜头">全景</button></div>
+<div class="pan-panel"><div class="pan-caption">移动视角</div><div class="dpad"><button data-pan="up" class="mc-button up" aria-label="镜头向上">▲</button><button data-pan="left" class="mc-button left" aria-label="镜头向左">◀</button><button id="center" class="mc-button center" aria-label="镜头回到中心">·</button><button data-pan="right" class="mc-button right" aria-label="镜头向右">▶</button><button data-pan="down" class="mc-button down" aria-label="镜头向下">▼</button></div></div>
+<footer><div id="tool-title">铲子 · 点按挖掘</div><div id="hotbar" role="toolbar" aria-label="元素工具栏"></div><div class="control-hint">点按 / 长按交互 · 方向键移镜头 · 双指缩放　·　↑ ↓ ← → 移动镜头　·　滚轮缩放　·　R 重来</div></footer>
+<section id="completion" class="completion" role="status" hidden><strong id="completion-title">通关成功！</strong><div id="completion-stars" aria-label="收集星星"></div><p id="completion-score">0 / 3 星</p><p>小鳄鱼洗上澡了！</p><div class="win-actions"><button id="next-level" class="mc-button reset">下一关 →</button><button id="win-retry" class="mc-button">再玩一次</button><button id="win-continue" class="mc-button">继续观察</button></div></section>
+<div id="hover-label" hidden></div><div id="toast" role="status"></div>
+<div id="modal" hidden><div class="modal-card"><button id="close" class="mc-button close" aria-label="关闭弹窗">×</button><div id="modal-body"></div></div></div>
+<div id="loading"><div class="load-block"></div><strong>正在打开方块世界…</strong><span>本地材质与脚本 · 无需联网</span></div>
+<script src="js/three.js"></script>
+<script src="assets/manifest.js"></script>
+<script src="assets/file-textures.js"></script>
+<script src="js/inventory.js"></script>
+<script src="js/fluid.js"></script>
+<script src="js/ducks.js"></script>
+<script src="js/simulation.js"></script>
+<script src="js/map-format.js"></script>
+<script src="js/level-library.js"></script>
+<script src="js/scene-gestures.js"></script>
+<script src="js/fluid-view.js"></script>
+<script src="js/duck-view.js"></script>
+<script src="js/game.js"></script></body></html>

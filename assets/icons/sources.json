@@ -1,0 +1,54 @@
+{
+  "sourcePage": "https://honghemc.cn/app/?ver=26.3",
+  "retrieved": "2026-10-28",
+  "records": [
+    {
+      "id": "pickaxe",
+      "url": "https://honghemc.cn/images/10.%20Items/2.%20Pickaxes/Iron_Pickaxe.png",
+      "sha256": "511fa4b33f8b4d7eccc9f5de37ba55a03c3777f0b79632a102b28de5b4bc6dec",
+      "bytes": 7965
+    },
+    {
+      "id": "wood",
+      "url": "https://honghemc.cn/images/20.%20Blocks/02.%20Planks/Oak_Planks.png",
+      "sha256": "e0d13be1e6fa60ea886500f8b626594279aa1501b70acb3913b8eca71907d0eb",
+      "bytes": 57657
+    },
+    {
+      "id": "stone",
+      "url": "https://honghemc.cn/images/20.%20Blocks/18.%20Decoration/Stone.png",
+      "sha256": "ed70e08d282ee63835f8d756cad7eed849cad33d5b375eb7139bd85a12f9b36d",
+      "bytes": 46405
+    },
+    {
+      "id": "obsidian",
+      "url": "https://honghemc.cn/images/20.%20Blocks/37.%20Nether/Obsidian.png",
+      "sha256": "35e675180e18b8bee8ed9ab6edb0ddd526b15a1d678415fe0a40faf821ad153c",
+      "bytes": 47686
+    },
+    {
+      "id": "tnt",
+      "url": "https://honghemc.cn/images/20.%20Blocks/22.%20Redstone/Tnt.png",
+      "sha256": "f8e350ac6ee0af01cc2972cefaeacb1eaa13c0df25a2e47e60af54da436ebe5e",
+      "bytes": 43242
+    },
+    {
+      "id": "water",
+      "url": "https://honghemc.cn/images/10.%20Items/19.%20Buckets/Water_Bucket.png",
+      "sha256": "afe1be12f6a94fac1f09be5c9dbbf678cd34d658975fe2ce057b79fe3aafe986",
+      "bytes": 8286
+    },
+    {
+      "id": "lava",
+      "url": "https://honghemc.cn/images/10.%20Items/19.%20Buckets/Lava_Bucket.png",
+      "sha256": "bc5dad38202259f142495160920fca11ec73cdd550a0c67f66a16956a7312399",
+      "bytes": 8335
+    },
+    {
+      "id": "lever",
+      "url": "https://honghemc.cn/images/10.%20Items/26.%20Redstone/Lever.png",
+      "bytes": 7245,
+      "sha256": "de57a7e1e65a569ee3df17d088d2bde3e33494fa80ba244ef9577bf352c5dc07"
+    }
+  ]
+}
